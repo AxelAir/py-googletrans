@@ -71,7 +71,8 @@ class Translator(object):
                                     token=token)
         url = urls.TRANSLATE.format(host=self._pick_service_url())
         r = self.session.get(url, params=params)
-
+        r.raise_for_status()
+        
         data = utils.format_json(r.text)
         return data
 
@@ -123,18 +124,20 @@ class Translator(object):
         data = self._translate(text, dest, src)
 
         # this code will be updated when the format is changed.
-        translated = data[0][0][0]
+        # Join separated results when using multiple symbol in a sentence like '?'
+        translated = ''.join([d[0] if d[0] else '' for d in data[0]])
 
         # actual source language that will be recognized by Google Translator when the
         # src passed is equal to auto.
-        try:
-            src = data[-1][0][0]
-        except Exception:  # pragma: nocover
-            pass
+        # FIX utils.py to get all results
+        # try:
+        #    src = data[-1][0][0]
+        # except Exception:  # pragma: nocover
+        #    pass
 
         pron = origin
         try:
-            pron = data[0][1][-1]
+            pron = data[0][-1][-1]
         except Exception:  # pragma: nocover
             pass
         if not PY3 and isinstance(pron, unicode) and isinstance(origin, str):  # pragma: nocover
